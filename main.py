@@ -19,7 +19,7 @@ class Data:
 
 class BabyBERTaMaxTrainer:
     def __init__(self):
-        self.tokenizer = self.loadTokenizer
+        self.tokenizer = self.loadTokenizer()
         device = "cuda" if torch.cuda.is_available() else "cpu"
         #Configuration parameters from BabyBERTa
         config = RobertaConfig(vocab_size=len(self.tokenizer.get_vocab()),
@@ -39,16 +39,29 @@ class BabyBERTaMaxTrainer:
                                )
         self.model = RobertaForMaskedLM(config=config)
         self.model.to(device)
+        print('Number of parameters: {:,}'.format(self.model.num_parameters()), flush=True)
     def loadTokenizer(self):
         tokenizer = Tokenizer.from_file(str("tokenizer/babyberta.json"))
         tokenizer.enable_truncation(max_length=params.max_input_length)
         return tokenizer
-    def initializeModel(self):
-        pass
+    def loadDataset(self):
+        #train
+        dataset_order = [f"{corpus}.train" for corpus in params.corpora]  # add .train to each corpus in params.corpora
+        dataset_paths = [Path("/dataset/train_10M") / dataset for dataset in dataset_order]
+        dataset_train = [DataSet(str(dataset_path), self.tokenizer, Data.min_sentence_length, Data.train_prob, Data.roberta_symbols) for dataset_path in dataset_paths]
+        #test
+        dataset_order = [f"{corpus}.test" for corpus in params.corpora]
+        dataset_paths = [Path("/dataset/test") / dataset for dataset in dataset_order]
+        dataset_test = [DataSet(str(dataset_path), self.tokenizer, Data.min_sentence_length, Data.train_prob, Data.roberta_symbols) for dataset_path in dataset_paths]
+        #dev
+        dataset_order = [f"{corpus}.dev" for corpus in params.corpora]
+        dataset_paths = [Path("/dataset/dev") / dataset for dataset in dataset_order]
+        dataset_dev = [DataSet(str(dataset_path), self.tokenizer, Data.min_sentence_length, Data.train_prob, Data.roberta_symbols) for dataset_path in dataset_paths]
+        return dataset_train, dataset_test, dataset_dev
     def trainModel(self):
         pass
     def saveModel(self):
         pass
 
 if __name__ == "__main__":
-
+    pass

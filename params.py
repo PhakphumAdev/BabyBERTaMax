@@ -14,7 +14,9 @@ class params:
     leave_unmasked_prob_start = 0.0
     leave_unmasked_prob = 0.0
     random_token_prob = 0.1
-    corpora = ('aochildes',)
+    #corpora = ('aochildes',)
+    #we will apply curriculum learning here by training from child-directed speech first then complex and non-dialogue text
+    corpora = ('childes','bnc_spoken','switchboard','open_subtitles','gutenberg','simple_wiki',)
     tokenizer = 'babyberta'
     add_prefix_space = True
     max_input_length = 128
