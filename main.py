@@ -2,10 +2,13 @@ import random
 import torch
 from torch.utils.data import DataLoader
 from pathlib import Path
-from transformers import RobertaForMaskedLM, RobertaConfig, Trainer, TrainingArguments, DataCollatorForLanguageModeling
+from transformers import Trainer, TrainingArguments, DataCollatorForLanguageModeling
+from transformers.models.roberta import RobertaConfig, RobertaForMaskedLM, RobertaTokenizerFast
 from tokenizers import Tokenizer
 from params import params
 from dataset import babyDataset
+from datasets import concatenate_datasets
+
 class Data:
     min_sentence_length = 3
     train_prob = 1.0  # probability that sentence is assigned to train split
@@ -16,62 +19,28 @@ class Data:
     eos_symbol = '</s>'
     roberta_symbols = [mask_symbol, pad_symbol, unk_symbol, bos_symbol, eos_symbol]
 
-class babyBERTaTrainer(Trainer):
-    def __init__(self, *args, train_dataset, eval_dataset, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.data_collator_train = train_dataset
-        self.data_collator_eval = eval_dataset
-    def get_train_dataloader(self):
-        """Use non-masking data collator for training"""
-        return DataLoader(
-            self.train_dataset,
-            batch_size=self.args.train_batch_size,
-            collate_fn=self.data_collator_train,
-            drop_last=self.args.dataloader_drop_last,
-            num_workers=self.args.dataloader_num_workers,
-        )
-
-    def get_eval_dataloader(self, eval_dataset=None):
-        """Use masking data collator for evaluation"""
-        eval_dataset = eval_dataset if eval_dataset is not None else self.eval_dataset
-        return DataLoader(
-            eval_dataset,
-            batch_size=self.args.eval_batch_size,
-            collate_fn=self.data_collator_eval,
-            drop_last=self.args.dataloader_drop_last,
-            num_workers=self.args.dataloader_num_workers,
-        )
 
 class BabyBERTaMax:
     def __init__(self):
         self.tokenizer = self.loadTokenizer()
         device = "cuda" if torch.cuda.is_available() else "cpu"
         #Configuration parameters from BabyBERTa
-        config = RobertaConfig(vocab_size=len(self.tokenizer.get_vocab()),
-                               pad_token_id=self.tokenizer.token_to_id(Data.pad_symbol),
-                               bos_token_id=self.tokenizer.token_to_id(Data.bos_symbol),
-                               eos_token_id=self.tokenizer.token_to_id(Data.eos_symbol),
-                               mask_token_id=self.tokenizer.token_to_id(Data.mask_symbol),
-                               return_dict=True,
-                               is_decoder=False,
-                               add_cross_attention=False,
-                               layer_norm_eps=params.layer_norm_eps,
-                               max_position_embeddings=params.max_input_length + 2,
-                               hidden_size=params.hidden_size,
-                               num_hidden_layers=params.num_layers,
-                               num_attention_heads=params.num_attention_heads,
-                               intermediate_size=params.intermediate_size,
-                               intializer_range=params.initializer_range
-                               )
+        config = RobertaConfig(vocab_size=self.tokenizer.vocab_size,
+                           hidden_size=params.hidden_size,
+                           num_hidden_layers=params.num_layers,
+                           num_attention_heads=params.num_attention_heads,
+                           intermediate_size=params.intermediate_size,
+                           initializer_range=params.initializer_range,
+                           )
         self.model = RobertaForMaskedLM(config=config)
         self.train, self.test, self.dev = self.loadDataset()
         self.model.to(device)
         print('Number of parameters: {:,}'.format(self.model.num_parameters()), flush=True)
     def loadTokenizer(self):
-        tokenizer = Tokenizer.from_file(str("tokenizer/babyberta.json"))
-        tokenizer.enable_truncation(max_length=params.max_input_length)
-        if tokenizer.mask_token is None:
-            tokenizer.add_special_tokens({'mask_token': '[MASK]'})
+        tokenizer = RobertaTokenizerFast(vocab_file=None,
+                                     merges_file=None,
+                                     tokenizer_file=str('tokenizer/babyberta.json'),
+                                     )
 
         return tokenizer
     def loadDataset(self):
@@ -90,34 +59,42 @@ class BabyBERTaMax:
         return dataset_train, dataset_test, dataset_dev
     
     def trainModel(self):
+        
+        #prepare train dataset
+        if len(self.train) > 1:
+            combined_train_dataset = concatenate_datasets([ds.tokenized_dataset for ds in self.train])
+        else:
+            combined_train_dataset = self.train[0].tokenized_dataset
 
         # Data collator without masking for training
-        data_collator_train = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm=False)
+        data_collator = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm_probability=params.mask_probability)
 
         # Data collator with masking for validation and testing
-        data_collator_eval = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm=True, mlm_probability=0.15)
-
+        seed=77
+        #adjust from official implementation huggingface
         training_args = TrainingArguments(
             output_dir="saved_model/babyberta_max",
             overwrite_output_dir=True,
-            num_train_epochs=params.num_epochs,
+            do_train=True,
+            do_eval=False,
+            do_predict=False,
+            max_steps=160_000,
             per_device_train_batch_size=params.batch_size,
             warmup_steps=params.num_warmup_steps,
+            seed=seed,
             learning_rate=params.lr,
-            weight_decay=params.weight_decay,
-            save_strategy="epoch",)
+            save_steps=40_000,)
         
-        trainer = babyBERTaTrainer(
+        trainer = Trainer(
             model=self.model,
             args=training_args,
-            train_dataset=self.train,
-            eval_dataset=self.dev,
-            data_collator_train=data_collator_train,
-            data_collator_eval=data_collator_eval
-        )
+            train_dataset=combined_train_dataset,
+            eval_dataset=None,
+            tokenizer=self.tokenizer,
+            data_collator=data_collator,
+        )        
         trainer.train()
-    def saveModel(self):
-        pass
+        trainer.save_model()
 
 if __name__ == "__main__":
     #init babyBERTa

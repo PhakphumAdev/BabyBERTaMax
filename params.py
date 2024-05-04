@@ -36,3 +36,7 @@ class params:
     intermediate_size = 1024
     initializer_range = 0.02
     layer_norm_eps = 1e-5
+
+    #from config
+    min_sentence_length = 3
+
