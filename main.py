@@ -73,15 +73,15 @@ class BabyBERTaMax:
     def loadDataset(self):
         #train
         dataset_order = [f"{corpus}.train" for corpus in params.corpora]  # add .train to each corpus in params.corpora
-        dataset_paths = [Path("/dataset/train_10M") / dataset for dataset in dataset_order]
+        dataset_paths = [Path("dataset/train_10M") / dataset for dataset in dataset_order]
         dataset_train = [babyDataset(str(dataset_path), self.tokenizer) for dataset_path in dataset_paths]
         #test
         dataset_order = [f"{corpus}.test" for corpus in params.corpora]
-        dataset_paths = [Path("/dataset/test") / dataset for dataset in dataset_order]
+        dataset_paths = [Path("dataset/test") / dataset for dataset in dataset_order]
         dataset_test = [babyDataset(str(dataset_path), self.tokenizer) for dataset_path in dataset_paths]
         #dev
         dataset_order = [f"{corpus}.dev" for corpus in params.corpora]
-        dataset_paths = [Path("/dataset/dev") / dataset for dataset in dataset_order]
+        dataset_paths = [Path("dataset/dev") / dataset for dataset in dataset_order]
         dataset_dev = [babyDataset(str(dataset_path), self.tokenizer) for dataset_path in dataset_paths]
         return dataset_train, dataset_test, dataset_dev
     
