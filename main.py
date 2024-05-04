@@ -51,6 +51,7 @@ class BabyBERTaMax:
                                pad_token_id=self.tokenizer.token_to_id(Data.pad_symbol),
                                bos_token_id=self.tokenizer.token_to_id(Data.bos_symbol),
                                eos_token_id=self.tokenizer.token_to_id(Data.eos_symbol),
+                               mask_token_id=self.tokenizer.token_to_id(Data.mask_symbol),
                                return_dict=True,
                                is_decoder=False,
                                add_cross_attention=False,
