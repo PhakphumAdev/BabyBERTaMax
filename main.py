@@ -70,6 +70,9 @@ class BabyBERTaMax:
     def loadTokenizer(self):
         tokenizer = Tokenizer.from_file(str("tokenizer/babyberta.json"))
         tokenizer.enable_truncation(max_length=params.max_input_length)
+        if tokenizer.mask_token is None:
+            tokenizer.add_special_tokens({'mask_token': '[MASK]'})
+
         return tokenizer
     def loadDataset(self):
         #train
