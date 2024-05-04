@@ -16,9 +16,9 @@
 
 
 module purge
-cd path/to/your/code
-OVERLAY_FILE=path/to/your/singularity/overlay/file
-SINGULARITY_IMAGE=path/to/your/singularity/image/file
+cd /home/pa2497/BabyBERTaMax
+OVERLAY_FILE=/scratch/pa2497/overlay-25GB-500K.ext3:rw
+SINGULARITY_IMAGE=/scratch/pa2497/cuda11.4.2-cudnn8.2.4-devel-ubuntu20.04.3.sif
 singularity exec --nv \
 	    --overlay $OVERLAY_FILE $SINGULARITY_IMAGE \
-	    /bin/bash -c "source /ext3/env.sh; bash hpc/run_truthfulqa_evaluation.sh"
+	    /bin/bash -c "source /ext3/env.sh; bash hpc/run_babyberta.sh"
