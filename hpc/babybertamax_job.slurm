@@ -9,7 +9,7 @@
 #SBATCH --time=10:00:00
 #SBATCH --mem=20GB
 #SBATCH --gres=gpu:1
-#SBATCH --job-name=truthfulqa
+#SBATCH --job-name=babybertamax
 #SBATCH --mail-type=ALL
 #SBATCH --mail-user=pa2497@nyu.edu
 #SBATCH --output="babybertamax.out"
