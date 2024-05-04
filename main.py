@@ -1,6 +1,6 @@
 import random
 import torch
-import torch.utils.data.Dataloader as DataLoader
+from torch.utils.data import DataLoader
 from pathlib import Path
 from transformers import RobertaForMaskedLM, RobertaConfig, Trainer, TrainingArguments, DataCollatorForLanguageModeling
 from tokenizers import Tokenizer
