@@ -9,10 +9,10 @@ from itertools import islice
 
 class babyDataset:
     def __init__(self, filepath, tokenizer):
-        self.filepath = filepath
+        self.filepath = Path(filepath)
         self.tokenizer = tokenizer
-        sentences = self.load_sentences_from_file(filepath,
-                                            include_punctuation=params.include_punctuation,
+        sentences = self.load_sentences_from_file(self.filepath,
+                                            include_punctuation=True,
                                             allow_discard=True)
         data_in_dict = {'text': self.make_sequences(sentences, params.num_sentences_per_input)}
         datasets = DatasetDict({'train': Dataset.from_dict(data_in_dict)})

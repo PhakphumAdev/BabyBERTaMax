@@ -1,0 +1,15 @@
+/opt/slurm/data/slurmd/job176268/slurm_script: line 18: module: command not found
+Traceback (most recent call last):
+  File "/home/pa2497/BabyBERTaMax/main.py", line 101, in <module>
+    babyBERTa = BabyBERTaMax()
+                ^^^^^^^^^^^^^^
+  File "/home/pa2497/BabyBERTaMax/main.py", line 36, in __init__
+    self.train, self.test, self.dev = self.loadDataset()
+                                      ^^^^^^^^^^^^^^^^^^
+  File "/home/pa2497/BabyBERTaMax/main.py", line 50, in loadDataset
+    dataset_train = [babyDataset(str(dataset_path), self.tokenizer) for dataset_path in dataset_paths]
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/pa2497/BabyBERTaMax/dataset.py", line 14, in __init__
+    sentences = self.load_sentences_from_file(filepath,
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: babyDataset.load_sentences_from_file() got multiple values for argument 'include_punctuation'
