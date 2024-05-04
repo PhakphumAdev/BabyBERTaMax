@@ -9,16 +9,12 @@ from itertools import islice
 
 class babyDataset:
     def __init__(self, filepath, tokenizer):
-        self.filepath = Path(filepath)
+        self.filepath = filepath
         self.tokenizer = tokenizer
-        sentences = self.load_sentences_from_file(self.filepath,
-                                            include_punctuation=True,
-                                            allow_discard=True)
-        data_in_dict = {'text': self.make_sequences(sentences, params.num_sentences_per_input)}
-        datasets = DatasetDict({'train': Dataset.from_dict(data_in_dict)})
+        dataset=load_dataset("text",data_files=self.filepath)
         # use babyberta tokenizer to tokenize the dataset
         text_column_name = "text"
-        self.tokenized_dataset =  datasets.map(
+        self.tokenized_dataset =  dataset.map(
                         self.tokenize_function,
                         batched=True,
                         num_proc=4,
