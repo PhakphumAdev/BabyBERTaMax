@@ -62,9 +62,11 @@ class BabyBERTaMax:
         
         #prepare train dataset
         if len(self.train) > 1:
-            combined_train_dataset = concatenate_datasets([ds.tokenized_dataset for ds in self.train])
+            # Ensure you are accessing the 'train' split of each dataset before concatenation
+            combined_train_dataset = concatenate_datasets([ds.tokenized_dataset['train'] for ds in self.train])
         else:
-            combined_train_dataset = self.train[0].tokenized_dataset
+            # Access the 'train' split of the single dataset
+            combined_train_dataset = self.train[0].tokenized_dataset['train']
 
         # Data collator without masking for training
         data_collator = DataCollatorForLanguageModeling(tokenizer=self.tokenizer, mlm_probability=params.mask_probability)
