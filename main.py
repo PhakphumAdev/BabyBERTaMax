@@ -85,6 +85,8 @@ class BabyBERTaMax:
             warmup_steps=params.num_warmup_steps,
             seed=seed,
             learning_rate=params.lr,
+            logging_dir="logs",
+            logging_steps=1000,
             save_steps=40_000,)
         
         trainer = Trainer(
