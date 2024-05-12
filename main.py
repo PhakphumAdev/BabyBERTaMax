@@ -8,6 +8,7 @@ from tokenizers import Tokenizer
 from params import params
 from dataset import babyDataset
 from datasets import concatenate_datasets
+import sys
 
 class Data:
     min_sentence_length = 3
@@ -21,7 +22,8 @@ class Data:
 
 
 class BabyBERTaMax:
-    def __init__(self):
+    def __init__(self, curriculum=True):
+        self.curriculum = curriculum
         self.tokenizer = self.loadTokenizer()
         device = "cuda" if torch.cuda.is_available() else "cpu"
         #Configuration parameters from BabyBERTa
@@ -33,7 +35,7 @@ class BabyBERTaMax:
                            initializer_range=params.initializer_range,
                            )
         self.model = RobertaForMaskedLM(config=config)
-        self.train, self.test, self.dev = self.loadDataset()
+        self.train, self.test, self.dev = self.loadDataset(curriculum=curriculum)
         self.model.to(device)
         print('Number of parameters: {:,}'.format(self.model.num_parameters()), flush=True)
     def loadTokenizer(self):
@@ -43,11 +45,19 @@ class BabyBERTaMax:
                                      )
 
         return tokenizer
-    def loadDataset(self):
+    def loadDataset(self,curriculum=True):
         #train
-        dataset_order = [f"{corpus}.train" for corpus in params.corpora]  # add .train to each corpus in params.corpora
-        dataset_paths = [Path("dataset/train_10M") / dataset for dataset in dataset_order]
-        dataset_train = [babyDataset(str(dataset_path), self.tokenizer) for dataset_path in dataset_paths]
+        if curriculum:
+            # if do curriculum learning, load 10M dataset in order
+            dataset_order = [f"{corpus}.train" for corpus in params.corpora]  # add .train to each corpus in params.corpora
+            dataset_paths = [Path("dataset/train_10M") / dataset for dataset in dataset_order]
+            dataset_train = [babyDataset(str(dataset_path), self.tokenizer) for dataset_path in dataset_paths]
+        else:
+            # random
+            dataset_order = random.sample(params.corpora, len(params.corpora))
+            dataset_paths = [Path("dataset/train_10M") / f"{corpus}.train" for corpus in dataset_order]
+            dataset_train = [babyDataset(str(dataset_path), self.tokenizer) for dataset_path in dataset_paths]
+
         #test
         dataset_order = [f"{corpus}.test" for corpus in params.corpora]
         dataset_paths = [Path("dataset/test") / dataset for dataset in dataset_order]
@@ -75,7 +85,7 @@ class BabyBERTaMax:
         seed=77
         #adjust from official implementation huggingface
         training_args = TrainingArguments(
-            output_dir="saved_model/babyberta_max",
+            output_dir="saved_model/babyberta_max_curriculum" if self.curriculum else "saved_model/babyberta_max_random",
             overwrite_output_dir=True,
             do_train=True,
             do_eval=False,
@@ -85,7 +95,7 @@ class BabyBERTaMax:
             warmup_steps=params.num_warmup_steps,
             seed=seed,
             learning_rate=params.lr,
-            logging_dir="logs",
+            logging_dir="logs/babyberta_max_curriculum" if self.curriculum else "logs/babyberta_max_random",
             logging_steps=1000,
             save_steps=40_000,)
         
@@ -101,6 +111,20 @@ class BabyBERTaMax:
         trainer.save_model()
 
 if __name__ == "__main__":
-    #init babyBERTa
-    babyBERTa = BabyBERTaMax()
+    # Check if curriculum argument is provided
+    if len(sys.argv) > 1:
+        curriculum_arg = sys.argv[1].lower()
+        if curriculum_arg == "true":
+            curriculum = True
+        elif curriculum_arg == "false":
+            curriculum = False
+        else:
+            print("Invalid curriculum argument. Please provide 'true' or 'false'.")
+            sys.exit(1)
+    else:
+        print("Curriculum argument not provided. Please provide 'true' or 'false'.")
+        sys.exit(1)
+    
+    # Init babyBERTa
+    babyBERTa = BabyBERTaMax(curriculum=curriculum)
     babyBERTa.trainModel()
