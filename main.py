@@ -97,7 +97,8 @@ class BabyBERTaMax:
             learning_rate=params.lr,
             logging_dir="logs/babyberta_max_curriculum" if self.curriculum else "logs/babyberta_max_random",
             logging_steps=1000,
-            save_steps=40_000,)
+            save_steps=160_000,  # Set save_steps to the total number of steps to save only the last model
+        )
         
         trainer = Trainer(
             model=self.model,
