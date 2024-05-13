@@ -11,21 +11,42 @@ class babyDataset:
     def __init__(self, filepath, tokenizer):
         self.filepath = filepath
         self.tokenizer = tokenizer
-        #dataset=load_dataset("text",data_files=self.filepath)
+        dataset=load_dataset("text",data_files=self.filepath)
+        processed_dataset = dataset.map(lambda example:self.clean_sentences(example, params), batched=False)
+        processed_dataset = processed_dataset.filter(lambda x: x['text'] is not None)
+
         # use babyberta tokenizer to tokenize the dataset
         text_column_name = "text"
-        sentences = self.load_sentences_from_file(filepath,
-                                         include_punctuation=params.include_punctuation,
-                                         allow_discard=True)
-        data_in_dict = {'text': self.make_sequences(sentences, params.num_sentences_per_input)}
-        datasets = DatasetDict({'train': Dataset.from_dict(data_in_dict)})
-        self.tokenized_dataset =  datasets.map(
+        self.tokenized_dataset =  processed_dataset.map(
                         self.tokenize_function,
                         batched=True,
                         num_proc=4,
                         remove_columns=[text_column_name],
                         load_from_cache_file=True,
                     )
+        
+    def clean_sentences(example, params, allow_discard=True, include_punctuation=True):
+        sentence = example['text'].rstrip('\n')
+        
+        # Check if sentence is shorter than the minimum required length
+        if sentence.count(' ') < params.Data.min_sentence_length - 1 and allow_discard:
+            return None  # This will be filtered out later
+
+        # Remove trailing punctuation if specified
+        if not include_punctuation:
+            sentence = sentence.rstrip('.!?')
+        
+        # Specific dataset clean-ups
+        if sentence.startswith('*CHI:'):
+            sentence = sentence[6:]
+        elif sentence.startswith('*MOT:'):
+            sentence = sentence[6:]
+        elif sentence.startswith('= = ='):
+            return None  # This will skip the article title
+        elif sentence.startswith('A:') or sentence.startswith('B:'):
+            sentence = sentence[3:]
+
+        return {'text': sentence}
 
     #helper function from babyberta
     def load_sentences_from_file(file_path: Path,
@@ -72,7 +93,7 @@ class babyDataset:
                 #switchboard.train has A: and B: at the start of each sentence
                 if sentence.startswith('A:') or sentence.startswith('B:'):
                     sentence = sentence[3:]
-                    
+
                 res.append(sentence)
 
         if num_too_small:
