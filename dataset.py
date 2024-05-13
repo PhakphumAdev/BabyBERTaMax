@@ -12,7 +12,7 @@ class babyDataset:
         self.filepath = filepath
         self.tokenizer = tokenizer
         dataset=load_dataset("text",data_files=self.filepath)
-        processed_dataset = dataset['train'].map(lambda example:self.clean_sentences(example, params), batched=False,remove_columns=['text'])
+        processed_dataset = dataset['train'].map(lambda example:self.clean_sentences(example), batched=False,remove_columns=['text'])
         processed_dataset = processed_dataset.filter(lambda x: x['text'] is not None)
 
         # use babyberta tokenizer to tokenize the dataset
@@ -25,7 +25,7 @@ class babyDataset:
                         load_from_cache_file=True,
                     )
         
-    def clean_sentences(example, params, allow_discard=True, include_punctuation=True):
+    def clean_sentences(self,example, allow_discard=True, include_punctuation=True):
         sentence = example['text'].rstrip('\n')
         
         # Check if sentence is shorter than the minimum required length
