@@ -12,7 +12,7 @@ class babyDataset:
         self.filepath = filepath
         self.tokenizer = tokenizer
         dataset=load_dataset("text",data_files=self.filepath)
-        processed_dataset = dataset.map(lambda example:self.clean_sentences(example, params), batched=False)
+        processed_dataset = dataset.map(lambda example:self.clean_sentences(example['train'], params), batched=False)
         processed_dataset = processed_dataset.filter(lambda x: x['text'] is not None)
 
         # use babyberta tokenizer to tokenize the dataset
