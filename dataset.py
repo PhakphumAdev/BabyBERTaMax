@@ -49,7 +49,7 @@ class babyDataset:
         return {'text': sentence}
 
     #helper function from babyberta
-    def load_sentences_from_file(file_path: Path,
+    def load_sentences_from_file(self,file_path: Path,
                              include_punctuation: bool = True,
                              allow_discard: bool = False,
                              ) -> List[str]:
@@ -102,7 +102,7 @@ class babyDataset:
         return res
     
     #helper function from babyberta
-    def make_sequences(sentences: List[str],
+    def make_sequences(self,sentences: List[str],
                    num_sentences_per_input: int,
                    ) -> List[str]:
 
