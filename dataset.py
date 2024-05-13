@@ -46,7 +46,8 @@ class babyDataset:
         elif sentence.startswith('A:') or sentence.startswith('B:'):
             sentence = sentence[3:]
 
-        return {'text': sentence}
+        data_in_dict = {'text': sentence}
+        return DatasetDict({'train': Dataset.from_dict(data_in_dict)})
 
     #helper function from babyberta
     def load_sentences_from_file(file_path: Path,
