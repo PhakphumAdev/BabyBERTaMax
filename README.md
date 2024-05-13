@@ -16,6 +16,6 @@ This repository contains the source code for BoyBERTa, an optimized version of t
 ## Usage
 To train our model use
 ```python
-python main true # to train with curriculum learning
-python main false # to train without curriculum learning (random order)
+python main.py true # to train with curriculum learning
+python main.py false # to train without curriculum learning (random order)
 ```
