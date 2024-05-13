@@ -12,7 +12,7 @@ class babyDataset:
         self.filepath = filepath
         self.tokenizer = tokenizer
         dataset=load_dataset("text",data_files=self.filepath)
-        processed_dataset = dataset.map(lambda example:self.clean_sentences(example['train'], params), batched=False)
+        processed_dataset = dataset['train'].map(lambda example:self.clean_sentences(example, params), batched=False,remove_columns=['text'])
         processed_dataset = processed_dataset.filter(lambda x: x['text'] is not None)
 
         # use babyberta tokenizer to tokenize the dataset
@@ -46,8 +46,7 @@ class babyDataset:
         elif sentence.startswith('A:') or sentence.startswith('B:'):
             sentence = sentence[3:]
 
-        data_in_dict = {'text': sentence}
-        return DatasetDict({'train': Dataset.from_dict(data_in_dict)})
+        return {'text': sentence}
 
     #helper function from babyberta
     def load_sentences_from_file(file_path: Path,
