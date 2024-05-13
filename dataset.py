@@ -14,7 +14,7 @@ class babyDataset:
         dataset=load_dataset("text",data_files=self.filepath)
         processed_dataset = dataset['train'].map(lambda example:self.clean_sentences(example), batched=False,remove_columns=['text'])
         processed_dataset = processed_dataset.filter(lambda x: x['text'] is not None)
-
+        processed_dataset = DatasetDict({'train':processed_dataset})
         # use babyberta tokenizer to tokenize the dataset
         text_column_name = "text"
         self.tokenized_dataset =  processed_dataset.map(
@@ -30,7 +30,7 @@ class babyDataset:
         
         # Check if sentence is shorter than the minimum required length
         if sentence.count(' ') < params.min_sentence_length - 1 and allow_discard:
-            return None  # This will be filtered out later
+            return {'text': None}  # Return a dictionary with 'text' as None
 
         # Remove trailing punctuation if specified
         if not include_punctuation:
@@ -42,7 +42,7 @@ class babyDataset:
         elif sentence.startswith('*MOT:'):
             sentence = sentence[6:]
         elif sentence.startswith('= = ='):
-            return None  # This will skip the article title
+            return {'text': None}  # Return a dictionary with 'text' as None
         elif sentence.startswith('A:') or sentence.startswith('B:'):
             sentence = sentence[3:]
 
