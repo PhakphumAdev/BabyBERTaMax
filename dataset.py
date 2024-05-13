@@ -29,7 +29,7 @@ class babyDataset:
         sentence = example['text'].rstrip('\n')
         
         # Check if sentence is shorter than the minimum required length
-        if sentence.count(' ') < params.Data.min_sentence_length - 1 and allow_discard:
+        if sentence.count(' ') < params.min_sentence_length - 1 and allow_discard:
             return None  # This will be filtered out later
 
         # Remove trailing punctuation if specified
