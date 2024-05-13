@@ -84,7 +84,7 @@ class BabyBERTaMax:
 
         # Data collator with masking for validation and testing
         seed=77
-        set_seed(seed)
+        #set_seed(seed)
         #adjust from official implementation huggingface
         training_args = TrainingArguments(
             output_dir="saved_model/babyberta_max_curriculum" if self.curriculum else "saved_model/babyberta_max_random",
