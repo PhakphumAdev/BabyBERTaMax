@@ -11,17 +11,22 @@ class babyDataset:
     def __init__(self, filepath, tokenizer):
         self.filepath = filepath
         self.tokenizer = tokenizer
-        dataset=load_dataset("text",data_files=self.filepath)
+        #dataset=load_dataset("text",data_files=self.filepath)
         # use babyberta tokenizer to tokenize the dataset
         text_column_name = "text"
-        self.tokenized_dataset =  dataset.map(
+        sentences = self.load_sentences_from_file(filepath,
+                                         include_punctuation=params.include_punctuation,
+                                         allow_discard=True)
+        data_in_dict = {'text': self.make_sequences(sentences, params.num_sentences_per_input)}
+        datasets = DatasetDict({'train': Dataset.from_dict(data_in_dict)})
+        self.tokenized_dataset =  datasets.map(
                         self.tokenize_function,
                         batched=True,
                         num_proc=4,
                         remove_columns=[text_column_name],
                         load_from_cache_file=True,
                     )
-        
+
     #helper function from babyberta
     def load_sentences_from_file(file_path: Path,
                              include_punctuation: bool = True,
@@ -54,6 +59,20 @@ class babyDataset:
                     sentence = sentence.rstrip('!')
                     sentence = sentence.rstrip('?')
 
+                #cleaning the dataset a bit
+                #childes.train has sentences with *CHI:\t and *MOT:\t at the start of the sentence
+                if sentence.startswith('*CHI:'):
+                    sentence = sentence[6:]
+                if sentence.startswith('*MOT:'):
+                    sentence = sentence[6:]
+                #simple_wiki.train has = = = at the start of each wikipedia article
+                if sentence.startswith('= = ='):
+                    #skip the article title
+                    continue
+                #switchboard.train has A: and B: at the start of each sentence
+                if sentence.startswith('A:') or sentence.startswith('B:'):
+                    sentence = sentence[3:]
+                    
                 res.append(sentence)
 
         if num_too_small:

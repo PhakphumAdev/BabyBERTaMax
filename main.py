@@ -2,7 +2,7 @@ import random
 import torch
 from torch.utils.data import DataLoader
 from pathlib import Path
-from transformers import Trainer, TrainingArguments, DataCollatorForLanguageModeling
+from transformers import Trainer, TrainingArguments, DataCollatorForLanguageModeling, set_seed
 from transformers.models.roberta import RobertaConfig, RobertaForMaskedLM, RobertaTokenizerFast
 from tokenizers import Tokenizer
 from params import params
@@ -55,6 +55,7 @@ class BabyBERTaMax:
         else:
             # random
             dataset_order = random.sample(params.corpora, len(params.corpora))
+            print(f"Random order: {dataset_order}", flush=True)
             dataset_paths = [Path("dataset/train_10M") / f"{corpus}.train" for corpus in dataset_order]
             dataset_train = [babyDataset(str(dataset_path), self.tokenizer) for dataset_path in dataset_paths]
 
@@ -83,6 +84,7 @@ class BabyBERTaMax:
 
         # Data collator with masking for validation and testing
         seed=77
+        set_seed(seed)
         #adjust from official implementation huggingface
         training_args = TrainingArguments(
             output_dir="saved_model/babyberta_max_curriculum" if self.curriculum else "saved_model/babyberta_max_random",
